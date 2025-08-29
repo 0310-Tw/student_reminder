@@ -21,6 +21,15 @@ class NotesService {
         .snapshots();
   }
 
+  // Collection-group query to get all public notes from all users
+  Stream<QuerySnapshot<Map<String, dynamic>>> watchAllPublicNotes() {
+    return _db
+        .collectionGroup('notes')
+        .where('visibility', isEqualTo: 'public')
+        .orderBy('aud_dt', descending: true)
+        .snapshots();
+  }
+
   Future<String> createNote(
     String uid, {
     required String title,

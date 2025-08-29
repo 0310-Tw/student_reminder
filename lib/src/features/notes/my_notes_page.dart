@@ -275,7 +275,9 @@ class _MyNotesPageState extends State<MyNotesPage> {
                     final body = (data['body'] ?? '').toString();
                     final tags = List<String>.from(data['tags'] ?? []);
 
-                    print('Note: $title, Tags: $tags'); // Debug print
+                    print(
+                      'Note: $title, Tags: $tags, Raw data tags: ${data['tags']}',
+                    ); // Enhanced debug print
 
                     return Card(
                       margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -323,26 +325,50 @@ class _MyNotesPageState extends State<MyNotesPage> {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(color: Colors.grey[600]),
                             ),
-                            if (tags.isNotEmpty) ...[
-                              SizedBox(height: 8),
-                              Wrap(
-                                spacing: 4,
-                                runSpacing: 2,
-                                children: tags
-                                    .map(
-                                      (tag) => Chip(
-                                        label: Text(
-                                          tag,
-                                          style: TextStyle(fontSize: 10),
-                                        ),
-                                        backgroundColor: Colors.blue[50],
-                                        materialTapTargetSize:
-                                            MaterialTapTargetSize.shrinkWrap,
-                                      ),
-                                    )
-                                    .toList(),
-                              ),
-                            ],
+                            // Always show tag section for debugging
+                            SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Text(
+                                  'Tags: ',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey[500],
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                if (tags.isEmpty)
+                                  Text(
+                                    '(none)',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.grey[400],
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  )
+                                else
+                                  Expanded(
+                                    child: Wrap(
+                                      spacing: 4,
+                                      runSpacing: 2,
+                                      children: tags
+                                          .map(
+                                            (tag) => Chip(
+                                              label: Text(
+                                                tag,
+                                                style: TextStyle(fontSize: 10),
+                                              ),
+                                              backgroundColor: Colors.blue[50],
+                                              materialTapTargetSize:
+                                                  MaterialTapTargetSize
+                                                      .shrinkWrap,
+                                            ),
+                                          )
+                                          .toList(),
+                                    ),
+                                  ),
+                              ],
+                            ),
                             SizedBox(height: 4),
                             InkWell(
                               onTap: () async {
