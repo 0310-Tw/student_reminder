@@ -524,6 +524,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     hintText: 'Tell us about yourself...',
                     maxLines: 3,
                     keyboardType: TextInputType.multiline,
+                    
                   ),
                    SizedBox(height: 24),
                   // Action buttons

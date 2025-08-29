@@ -117,13 +117,11 @@ class _NoteEditorDialogState extends State<NoteEditorDialog> {
                       SizedBox(height: 16),
                       LiveCharCounterTextField(
                         controller: _body,
-
                         labelText: 'Body',
-
                         maxLines: 6,
                         textInputAction: TextInputAction.newline,
                         validator: validateNotEmpty,
-                        maxLength: null,
+                        maxLength: 150,
                       ),
                       SizedBox(height: 16),
                       // Tags Section
