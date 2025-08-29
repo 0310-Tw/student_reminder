@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:students_reminder/src/services/auth_service.dart';
+import 'package:students_reminder/src/shared/misc.dart';
 import 'package:students_reminder/src/shared/routes.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -31,9 +32,7 @@ class _RegisterPageState extends State<RegisterPage> {
       );
       if (mounted) Navigator.pushReplacementNamed(context, AppRoutes.main);
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Registration failed : $e')));
+      displaySnackBar(context, 'Registration failed: $e');
     } finally {
       if (mounted) setState(() => _busy = false);
     }

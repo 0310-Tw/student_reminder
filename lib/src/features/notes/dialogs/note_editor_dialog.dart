@@ -186,7 +186,7 @@ class _NoteEditorDialogState extends State<NoteEditorDialog> {
                                 Text('Visibility:'),
                                 SizedBox(height: 8),
                                 DropdownButtonFormField<String>(
-                                  value: _visibility,
+                                  initialValue: _visibility,
                                   decoration: InputDecoration(
                                     border: OutlineInputBorder(),
                                     contentPadding: EdgeInsets.symmetric(
@@ -289,7 +289,6 @@ class _NoteEditorDialogState extends State<NoteEditorDialog> {
                 }
 
                 if (widget.noteId == null) {
-                  print('Creating note with tags: $_tags'); // Debug print
                   await NotesService.instance.createNote(
                     widget.uid,
                     title: _title.text.trim(),
@@ -299,7 +298,6 @@ class _NoteEditorDialogState extends State<NoteEditorDialog> {
                     tags: _tags,
                   );
                 } else {
-                  print('Updating note with tags: $_tags'); // Debug print
                   await NotesService.instance.updateNote(
                     widget.uid,
                     widget.noteId!,

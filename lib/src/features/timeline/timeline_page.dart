@@ -139,7 +139,7 @@ class _TimelinePageState extends State<TimelinePage> {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    'By: ${userId}',
+                                    'By: $userId',
                                     style: Theme.of(
                                       context,
                                     ).textTheme.bodySmall,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:students_reminder/src/services/auth_service.dart';
+import 'package:students_reminder/src/shared/misc.dart';
 import 'package:students_reminder/src/shared/routes.dart';
 
 class LoginPage extends StatefulWidget {
@@ -21,9 +22,7 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) Navigator.pushReplacementNamed(context, AppRoutes.main);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Login Failed: $e')));
+        displaySnackBar(context, 'Login Failed: $e');
       }
     } finally {
       if (mounted) setState(() => _busy = false);
