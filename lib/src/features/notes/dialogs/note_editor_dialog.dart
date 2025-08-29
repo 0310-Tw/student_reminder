@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:students_reminder/src/services/note_service.dart';
 import 'package:students_reminder/src/shared/misc.dart';
 import 'package:students_reminder/src/shared/validators_%20and_widgets.dart';
+import 'package:students_reminder/src/shared/widgets/live_char_counter_text_field.dart';
 
 class NoteEditorDialog extends StatefulWidget {
   final String uid;
@@ -114,16 +115,15 @@ class _NoteEditorDialogState extends State<NoteEditorDialog> {
                         validator: validateNotEmpty,
                       ),
                       SizedBox(height: 16),
-                      TextFormField(
+                      LiveCharCounterTextField(
                         controller: _body,
-                        decoration: InputDecoration(
-                          labelText: 'Body',
-                          border: OutlineInputBorder(),
-                          alignLabelWithHint: true,
-                        ),
+
+                        labelText: 'Body',
+
                         maxLines: 6,
                         textInputAction: TextInputAction.newline,
                         validator: validateNotEmpty,
+                        maxLength: null,
                       ),
                       SizedBox(height: 16),
                       // Tags Section

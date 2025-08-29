@@ -9,6 +9,7 @@ import 'package:students_reminder/src/features/auth/login_page.dart';
 import 'package:students_reminder/src/services/auth_service.dart';
 import 'package:students_reminder/src/services/user_service.dart';
 import 'package:students_reminder/src/shared/misc.dart';
+import 'package:students_reminder/src/shared/widgets/live_char_counter_text_field.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -125,14 +126,14 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Container(
           height: 400,
           width: 300,
-          padding: const EdgeInsets.all(16),
+          padding:  EdgeInsets.all(16),
           child: Column(
             children: [
-              const Text(
+               Text(
                 'Crop Profile Photo',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 16),
+               SizedBox(height: 16),
               Expanded(
                 child: Crop(
                   image: _imageData!,
@@ -147,10 +148,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   radius: 0,
                   interactive: true,
                   fixCropRect: false,
-                  cornerDotBuilder: (size, edgeAlignment) => const DotControl(),
+                  cornerDotBuilder: (size, edgeAlignment) =>  DotControl(),
                 ),
               ),
-              const SizedBox(height: 16),
+               SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -159,11 +160,11 @@ class _ProfilePageState extends State<ProfilePage> {
                       Navigator.of(context).pop();
                       setState(() => _imageData = null);
                     },
-                    child: const Text('Cancel'),
+                    child:  Text('Cancel'),
                   ),
                   ElevatedButton(
                     onPressed: () => _cropController.crop(),
-                    child: const Text('Crop'),
+                    child:  Text('Crop'),
                   ),
                 ],
               ),
@@ -346,11 +347,11 @@ class _ProfilePageState extends State<ProfilePage> {
             actions: [
               IconButton(
                 onPressed: () => _onLogout(context),
-                icon: const Icon(Icons.logout),
+                icon: Icon(Icons.logout),
               ),
             ],
             flexibleSpace: FlexibleSpaceBar(
-              title: const Text('My Profile'),
+              title: Text('My Profile'),
               background: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -402,12 +403,12 @@ class _ProfilePageState extends State<ProfilePage> {
                       foregroundColor: Theme.of(context).primaryColor,
                       onPressed: _coverBusy ? null : _onPickCoverImage,
                       child: _coverBusy
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Icon(Icons.camera_alt, size: 20),
+                          : Icon(Icons.camera_alt, size: 20),
                     ),
                   ),
                 ],
@@ -417,7 +418,7 @@ class _ProfilePageState extends State<ProfilePage> {
           // Profile content
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding:  EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -440,7 +441,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             child: _busy
                                 ? Container(
                                     color: Colors.grey.shade200,
-                                    child: const Center(
+                                    child:  Center(
                                       child: CircularProgressIndicator(),
                                     ),
                                   )
@@ -451,7 +452,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                     errorBuilder: (context, error, stackTrace) {
                                       return Container(
                                         color: Colors.grey.shade200,
-                                        child: const Icon(
+                                        child:  Icon(
                                           Icons.person,
                                           size: 60,
                                           color: Colors.grey,
@@ -480,7 +481,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   )
                                 : Container(
                                     color: Colors.grey.shade200,
-                                    child: const Icon(
+                                    child:  Icon(
                                       Icons.person,
                                       size: 60,
                                       color: Colors.grey,
@@ -491,52 +492,51 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                   SizedBox(height: 8),
                   Center(
                     child: TextButton.icon(
-                      icon: const Icon(Icons.camera_alt),
+                      icon:  Icon(Icons.camera_alt),
                       onPressed: _busy ? null : _onPickPhoto,
                       label: Text(
                         _busy ? 'Uploading...' : 'Change Profile Image',
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                   SizedBox(height: 24),
                   // User info section
                   Text('Name: ${_firstName.text} ${_lastName.text}'),
-                  const SizedBox(height: 8),
+                   SizedBox(height: 8),
                   Text('Email: ${user.email}'),
-                  const SizedBox(height: 24),
+                   SizedBox(height: 24),
                   // Editable fields
                   TextField(
                     controller: _phone,
-                    decoration: const InputDecoration(
+                    decoration:  InputDecoration(
                       labelText: 'Phone #',
                       border: OutlineInputBorder(),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  TextField(
+                   SizedBox(height: 16),
+                  LiveCharCounterTextField(
                     controller: _bio,
+                    maxLength: 100,
+                    labelText: 'Bio',
+                    hintText: 'Tell us about yourself...',
                     maxLines: 3,
-                    decoration: const InputDecoration(
-                      labelText: 'Bio',
-                      border: OutlineInputBorder(),
-                      alignLabelWithHint: true,
-                    ),
+                    keyboardType: TextInputType.multiline,
                   ),
-                  const SizedBox(height: 24),
+                   SizedBox(height: 24),
                   // Action buttons
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _busy ? null : _updateProfile,
                       child: _busy
-                          ? const CircularProgressIndicator()
-                          : const Text('Save Profile'),
+                          ?  CircularProgressIndicator()
+                          :  Text('Save Profile'),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                   SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton(
@@ -551,20 +551,21 @@ class _ProfilePageState extends State<ProfilePage> {
                           );
                         }
                       },
-                      child: const Text('Send Password Reset Email'),
+                      child:  Text('Send Password Reset Email'),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                   SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
                     child: TextButton(
                       onPressed: () async {
                         await AuthService.instance.logout();
                       },
-                      child: const Text('Logout'),
+                      child:  Text('Logout'),
                     ),
                   ),
-                  const SizedBox(height: 24), // Extra bottom padding
+                  
+                   SizedBox(height: 24), // Extra bottom padding
                 ],
               ),
             ),

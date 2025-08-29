@@ -45,8 +45,8 @@ class _MainLayoutPageState extends State<MainLayoutPage> {
                 label: 'Notes',
               ),
               NavigationDestination(
-                icon: Icon(Icons.timeline),
-                label: 'Timeline',
+                icon: Icon(Icons.public),
+                label: 'Public Notes',
               ),
               NavigationDestination(
                 icon: Icon(Icons.person_outline),
