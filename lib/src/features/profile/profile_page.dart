@@ -9,6 +9,7 @@ import 'package:students_reminder/src/features/auth/login_page.dart';
 import 'package:students_reminder/src/services/auth_service.dart';
 import 'package:students_reminder/src/services/user_service.dart';
 import 'package:students_reminder/src/shared/misc.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -75,7 +76,10 @@ class _ProfilePageState extends State<ProfilePage> {
       final status = await Permission.photos.request();
       if (!status.isGranted) {
         if (mounted) {
-          displaySnackBar(context, 'Photo permission is required to select images');
+          displaySnackBar(
+            context,
+            'Photo permission is required to select images',
+          );
         }
         setState(() => _busy = false);
         return;
@@ -104,7 +108,6 @@ class _ProfilePageState extends State<ProfilePage> {
       // Show cropping dialog
       _showCropDialog();
     } catch (e) {
-     
       if (mounted) {
         displaySnackBar(context, 'Error picking image: $e');
       }
@@ -239,13 +242,71 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  // Cover image upload functionality
+  Future<void> _onPickCoverImage() async {
+    setState(() => _coverBusy = true);
+    try {
+      // Request permissions
+      final status = await Permission.photos.request();
+      if (!status.isGranted) {
+        if (mounted) {
+          displaySnackBar(
+            context,
+            'Photo permission is required to select images',
+          );
+        }
+        setState(() => _coverBusy = false);
+        return;
+      }
+
+      final picker = ImagePicker();
+      final file = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+        maxWidth: 1200,
+        maxHeight: 800,
+      );
+
+      if (file == null) {
+        setState(() => _coverBusy = false);
+        return;
+      }
+
+      // Upload cover image without cropping (landscape format)
+      final uid = AuthService.instance.currentUser!.uid;
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('covers')
+          .child('$uid.jpg');
+
+      final uploadTask = storageRef.putFile(File(file.path));
+      final snapshot = await uploadTask;
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+
+      // Update Firestore with cover URL
+      await UserService.instance.updateCoverImage(uid, downloadUrl);
+
+      if (mounted) {
+        displaySnackBar(context, 'Cover image updated!');
+      }
+    } catch (e) {
+      if (mounted) {
+        displaySnackBar(context, 'Error updating cover image: $e');
+      }
+    } finally {
+      if (mounted) setState(() => _coverBusy = false);
+    }
+  }
+
   final _bio = TextEditingController();
   final _phone = TextEditingController();
   final _firstName = TextEditingController();
   final _lastName = TextEditingController();
 
   String? _photoUrl;
+  String? _coverUrl; // Add cover image URL
   bool _busy = false;
+  bool _coverBusy = false; // Separate loading state for cover image
 
   // Cropping state variables
   Uint8List? _imageData;
@@ -262,7 +323,10 @@ class _ProfilePageState extends State<ProfilePage> {
         _lastName.text = (data['lastName'] ?? '') as String;
         _bio.text = (data['bio'] ?? '') as String;
         _phone.text = (data['phone'] ?? '') as String;
-        setState(() => _photoUrl = data['photoUrl'] as String?);
+        setState(() {
+          _photoUrl = data['photoUrl'] as String?;
+          _coverUrl = data['coverUrl'] as String?; // Listen for cover URL
+        });
       }
     });
   }
@@ -272,129 +336,262 @@ class _ProfilePageState extends State<ProfilePage> {
     final user = AuthService.instance.currentUser!;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('My Profile'),
-        actions: [
-          IconButton(
-            onPressed: () => _onLogout(context),
-            icon: Icon(Icons.logout),
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: EdgeInsets.all(16),
-        children: [
-          // Circular profile image with proper aspect ratio
-          Center(
-            child: Container(
-              width: 160,
-              height: 160,
-              child: AspectRatio(
-                aspectRatio: 1.0, // Square aspect ratio for circular display
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Theme.of(context).primaryColor,
-                      width: 2,
+      body: CustomScrollView(
+        slivers: [
+          // Collapsible cover image with SliverAppBar
+          SliverAppBar(
+            expandedHeight: 250.0,
+            floating: false,
+            pinned: true,
+            actions: [
+              IconButton(
+                onPressed: () => _onLogout(context),
+                icon: const Icon(Icons.logout),
+              ),
+            ],
+            flexibleSpace: FlexibleSpaceBar(
+              title: const Text('My Profile'),
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Cover image or placeholder
+                  _coverUrl != null
+                      ? Image.network(
+                          _coverUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return _buildCoverPlaceholder();
+                          },
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              color: Colors.grey.shade200,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  value:
+                                      loadingProgress.expectedTotalBytes != null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                            loadingProgress.expectedTotalBytes!
+                                      : null,
+                                ),
+                              ),
+                            );
+                          },
+                        )
+                      : _buildCoverPlaceholder(),
+                  // Gradient overlay for better text readability
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.3),
+                        ],
+                      ),
                     ),
                   ),
-                  child: ClipOval(
-                    child: _busy
-                        ? Container(
-                            color: Colors.grey.shade200,
-                            child: const Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                          )
-                        : _photoUrl != null
-                        ? Image.network(
-                            _photoUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: Colors.grey.shade200,
-                                child: const Icon(
-                                  Icons.person,
-                                  size: 60,
-                                  color: Colors.grey,
-                                ),
-                              );
-                            },
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-                              return Container(
-                                color: Colors.grey.shade200,
-                                child: Center(
-                                  child: CircularProgressIndicator(
-                                    value:
-                                        loadingProgress.expectedTotalBytes !=
-                                            null
-                                        ? loadingProgress
-                                                  .cumulativeBytesLoaded /
-                                              loadingProgress
-                                                  .expectedTotalBytes!
-                                        : null,
-                                  ),
-                                ),
-                              );
-                            },
-                          )
-                        : Container(
-                            color: Colors.grey.shade200,
-                            child: const Icon(
-                              Icons.person,
-                              size: 60,
-                              color: Colors.grey,
-                            ),
-                          ),
+                  // Change cover button for current user
+                  Positioned(
+                    bottom: 16,
+                    right: 16,
+                    child: FloatingActionButton(
+                      mini: true,
+                      backgroundColor: Colors.white,
+                      foregroundColor: Theme.of(context).primaryColor,
+                      onPressed: _coverBusy ? null : _onPickCoverImage,
+                      child: _coverBusy
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.camera_alt, size: 20),
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
-          const SizedBox(height: 8),
-          TextButton.icon(
-            icon: Icon(Icons.camera_alt),
-            onPressed: _busy ? null : _onPickPhoto,
-            label: Text(_busy ? 'Uploading...' : 'Change Image'),
-          ),
-          SizedBox(height: 12),
-          Text('Name: ${_firstName.text} ${_lastName.text} '),
-          Text('Email: ${user.email}'),
-          SizedBox(height: 12),
-          TextField(
-            controller: _phone,
-            decoration: InputDecoration(labelText: 'Phone #'),
-          ),
-          SizedBox(height: 12),
-          TextField(
-            controller: _bio,
-            decoration: InputDecoration(labelText: 'Bio'),
-          ),
-          SizedBox(height: 14),
-          ElevatedButton(
-            onPressed: _busy ? null : _updateProfile,
-            child: _busy ? CircularProgressIndicator() : Text('Save/Update'),
-          ),
-          SizedBox(height: 12),
-          OutlinedButton(
-            onPressed: () async {
-              await AuthService.instance.sendPasswordReset(user.email!);
-              if (mounted) {
-                displaySnackBar(context, 'Password reset email sent!');
-              }
-            },
-            child: Text('Send Password reset email'),
-          ),
-          SizedBox(height: 12),
-          TextButton(
-            onPressed: () async {
-              await AuthService.instance.logout();
-            },
-            child: Text('Logout'),
+          // Profile content
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Profile image section
+                  Center(
+                    child: Container(
+                      width: 160,
+                      height: 160,
+                      child: AspectRatio(
+                        aspectRatio: 1.0,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Theme.of(context).primaryColor,
+                              width: 2,
+                            ),
+                          ),
+                          child: ClipOval(
+                            child: _busy
+                                ? Container(
+                                    color: Colors.grey.shade200,
+                                    child: const Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  )
+                                : _photoUrl != null
+                                ? Image.network(
+                                    _photoUrl!,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        color: Colors.grey.shade200,
+                                        child: const Icon(
+                                          Icons.person,
+                                          size: 60,
+                                          color: Colors.grey,
+                                        ),
+                                      );
+                                    },
+                                    loadingBuilder: (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return Container(
+                                        color: Colors.grey.shade200,
+                                        child: Center(
+                                          child: CircularProgressIndicator(
+                                            value:
+                                                loadingProgress
+                                                        .expectedTotalBytes !=
+                                                    null
+                                                ? loadingProgress
+                                                          .cumulativeBytesLoaded /
+                                                      loadingProgress
+                                                          .expectedTotalBytes!
+                                                : null,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  )
+                                : Container(
+                                    color: Colors.grey.shade200,
+                                    child: const Icon(
+                                      Icons.person,
+                                      size: 60,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Center(
+                    child: TextButton.icon(
+                      icon: const Icon(Icons.camera_alt),
+                      onPressed: _busy ? null : _onPickPhoto,
+                      label: Text(
+                        _busy ? 'Uploading...' : 'Change Profile Image',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // User info section
+                  Text('Name: ${_firstName.text} ${_lastName.text}'),
+                  const SizedBox(height: 8),
+                  Text('Email: ${user.email}'),
+                  const SizedBox(height: 24),
+                  // Editable fields
+                  TextField(
+                    controller: _phone,
+                    decoration: const InputDecoration(
+                      labelText: 'Phone #',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _bio,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      labelText: 'Bio',
+                      border: OutlineInputBorder(),
+                      alignLabelWithHint: true,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Action buttons
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _busy ? null : _updateProfile,
+                      child: _busy
+                          ? const CircularProgressIndicator()
+                          : const Text('Save Profile'),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () async {
+                        await AuthService.instance.sendPasswordReset(
+                          user.email!,
+                        );
+                        if (mounted) {
+                          displaySnackBar(
+                            context,
+                            'Password reset email sent!',
+                          );
+                        }
+                      },
+                      child: const Text('Send Password Reset Email'),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextButton(
+                      onPressed: () async {
+                        await AuthService.instance.logout();
+                      },
+                      child: const Text('Logout'),
+                    ),
+                  ),
+                  const SizedBox(height: 24), // Extra bottom padding
+                ],
+              ),
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCoverPlaceholder() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Theme.of(context).primaryColor.withOpacity(0.8),
+            Theme.of(context).primaryColor.withOpacity(0.4),
+          ],
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.landscape,
+          size: 60,
+          color: Colors.white.withOpacity(0.7),
+        ),
       ),
     );
   }

@@ -56,4 +56,9 @@ class UserService {
     await _db.collection('users').doc(uid).update({'photoUrl': url});
     return url;
   }
+
+  // Update cover image URL in Firestore
+  Future<void> updateCoverImage(String uid, String coverUrl) async {
+    await _db.collection('users').doc(uid).update({'coverUrl': coverUrl});
+  }
 }
