@@ -75,7 +75,7 @@ class _NoteFormState extends State<NoteForm> {
               ),
               SizedBox(height: 12),
               DropdownButtonFormField<CourseGroup>(
-                value: _selectedCourseGroup,
+                initialValue: _selectedCourseGroup,
                 items: CourseGroup.values.map((group) {
                   return DropdownMenuItem(
                     value: group,
@@ -89,7 +89,7 @@ class _NoteFormState extends State<NoteForm> {
               ),
               SizedBox(height: 12),
               DropdownButtonFormField<NoteVisibility>(
-                value: _selectedVisibility,
+                initialValue: _selectedVisibility,
                 items: NoteVisibility.values.map((visibility) {
                   return DropdownMenuItem(
                     value: visibility,

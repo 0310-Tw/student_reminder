@@ -15,7 +15,7 @@ class _MyNotesPageState extends State<MyNotesPage> {
   String _searchQuery = '';
   String _visibilityFilter = 'all';
   DateTimeRange? _dueDateRange;
-  List<String> _selectedTags = [];
+  final List<String> _selectedTags = [];
   String _sortBy = 'aud_dt'; // aud_dt, dueDate, title
   bool _sortAscending = false;
   final TextEditingController _searchController = TextEditingController();

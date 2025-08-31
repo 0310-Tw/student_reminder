@@ -186,7 +186,7 @@ class _NoteEditorDialogState extends State<NoteEditorDialog> {
                                 Text('Visibility:'),
                                 SizedBox(height: 8),
                                 DropdownButtonFormField<String>(
-                                  value: _visibility,
+                                  initialValue: _visibility,
                                   decoration: InputDecoration(
                                     border: OutlineInputBorder(),
                                     contentPadding: EdgeInsets.symmetric(
