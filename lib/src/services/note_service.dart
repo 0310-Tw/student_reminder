@@ -21,12 +21,12 @@ class NotesService {
         .snapshots();
   }
 
-  // Collection-group query to get all public notes from all users
-  Stream<QuerySnapshot<Map<String, dynamic>>> watchAllPublicNotes() {
-    return _db
+  Stream<QuerySnapshot<Map<String, dynamic>>> publicFeeds() {
+  return _db
         .collectionGroup('notes')
         .where('visibility', isEqualTo: 'public')
-        .orderBy('aud_dt', descending: true)
+        .orderBy('aud_dt', descending: true) // or orderBy('likesCount', descending: true)
+        .limit(100)
         .snapshots();
   }
 
@@ -71,5 +71,67 @@ class NotesService {
 
   Future<void> deleteNote(String uid, String noteId) {
     return _notesCol(uid).doc(noteId).delete();
+  }
+   Future<void> toggleLike({
+    required DocumentReference<Map<String, dynamic>> noteRef,
+    required String uid,
+  }) async {
+    final db = FirebaseFirestore.instance;
+
+    await db.runTransaction((tx) async {
+      final snap = await tx.get(noteRef);
+      if (!snap.exists) return;
+
+      final data = snap.data()!;
+      final Map<String, dynamic> likedBy =
+          Map<String, dynamic>.from(data['likedBy'] ?? const {});
+      final bool alreadyLiked = likedBy[uid] == true;
+      final int currentCount = (data['likesCount'] ?? 0) as int;
+
+      if (alreadyLiked) {
+        // UNLIKE
+        likedBy.remove(uid);
+        final newCount = (currentCount - 1).clamp(0, 1 << 30);
+        tx.update(noteRef, {
+          'likesCount': newCount,
+          'likedBy.$uid': FieldValue.delete(),
+        });
+      } else {
+        // LIKE
+        final newCount = currentCount + 1;
+        tx.update(noteRef, {
+          'likesCount': newCount,
+          'likedBy.$uid': true,
+        });
+      }
+    });
+  }
+  Future<void> reportNote({
+    required DocumentReference<Map<String, dynamic>> noteRef,
+    required String uid,
+    required String reason,
+  }) async {
+    final reportRef = noteRef.collection('reports').doc(uid);
+    await reportRef.set({
+      'reason': reason,
+      'createdAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  /// Remove the current user's report (optional "Undo report")
+  Future<void> unreportNote({
+    required DocumentReference<Map<String, dynamic>> noteRef,
+    required String uid,
+  }) async {
+    await noteRef.collection('reports').doc(uid).delete();
+  }
+
+  /// Admin: stream all report docs across all notes (newest first)
+  Stream<QuerySnapshot<Map<String, dynamic>>> streamAllReportsForAdmin({int limit = 200}) {
+    return FirebaseFirestore.instance
+        .collectionGroup('reports')
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
+        .snapshots();
   }
 }

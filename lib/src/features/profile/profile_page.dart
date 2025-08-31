@@ -424,7 +424,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 children: [
                   // Profile image section
                   Center(
-                    child: Container(
+                    child: SizedBox(
                       width: 160,
                       height: 160,
                       child: AspectRatio(
