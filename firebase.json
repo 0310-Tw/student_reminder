@@ -1,0 +1,29 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "student-reminder-e740f",
+          "appId": "1:519102964169:android:ab153aa6e206d0ea808818",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "student-reminder-e740f",
+          "configurations": {
+            "android": "1:519102964169:android:ab153aa6e206d0ea808818",
+            "ios": "1:519102964169:ios:acb101771d6931c2808818",
+            "web": "1:519102964169:web:02e1847e165dda99808818"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "database": "(default)",
+    "location": "nam5",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}
